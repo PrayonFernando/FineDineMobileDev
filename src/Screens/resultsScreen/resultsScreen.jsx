@@ -6,7 +6,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import ResultScreenStyle from './resultsScreen.Style';
 
-const API_ENDPOINT = 'https://v1/get_restaurants_by_cusine';
+const API_ENDPOINT = 'http://localhost /v1/get_restaurants_by_cusine'; // Use your actual API endpoint
 
 const ResultsScreen = () => {
   const navigation = useNavigation();
@@ -14,115 +14,41 @@ const ResultsScreen = () => {
   const buttonTitles = ['Food', 'Service', 'Price', 'Ambiance', 'Hygiene'];
 
   const route = useRoute();
+  const [restaurants, setRestaurants] = useState([]);
+  const [displayRestaurants, setDisplayRestaurants] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('overall_avg_score');
-  const [sortedRestaurants, setSortedRestaurants] = useState([]);
-  const [restaurants, setRestaurants] = useState([
-    // Adding some dummy data for testing purposes
-    {
-      id: '1',
-      name: 'food 1',
-      image: '', // Image URL left empty
-      address: '123 Curry Lane',
-      overall_avg_score: 4.5,
-      food_quality: 5,
-      service: 4,
-      price: 4,
-      ambiance: 4.5,
-      hygiene: 5,
-    },
-    {
-      id: '2',
-      name: 'food 2',
-      image: '', // Image URL left empty
-      address: '456 Spicy Ave',
-      overall_avg_score: 4.7,
-      food_quality: 4,
-      service: 5,
-      price: 4,
-      ambiance: 4.5,
-      hygiene: 5,
-    },
-    {
-      id: '1',
-      name: 'food 3',
-      image: '', // Image URL left empty
-      address: '123 Curry Lane',
-      overall_avg_score: 4.5,
-      food_quality: 3,
-      service: 5,
-      price: 4,
-      ambiance: 4.5,
-      hygiene: 5,
-    },
-    {
-      id: '2',
-      name: 'food 4',
-      image: '', // Image URL left empty
-      address: '456 ',
-      overall_avg_score: 4.7,
-      food_quality: 2,
-      service: 5,
-      price: 4,
-      ambiance: 4.5,
-      hygiene: 5,
-    },
-    {
-      id: '1',
-      name: 'food 5',
-      image: '', // Image URL left empty
-      address: '123 Curry Lane',
-      overall_avg_score: 4.5,
-      food_quality: 1,
-      service: 5,
-      price: 4,
-      ambiance: 4.5,
-      hygiene: 5,
-    },
-    {
-      id: '2',
-      name: 'food 6',
-      image: '', // Image URL left empty
-      address: '456 Spicy Ave',
-      overall_avg_score: 4.7,
-      food_quality: 4,
-      service: 5,
-      price: 4,
-      ambiance: 4.5,
-      hygiene: 5,
-    },
-  ]);
-
-  // useEffect(() => {
-  //   // Retrieve the cuisine from the route params
-  //   const cuisine = route.params?.cuisine;
-
-  //   // Define a function to fetch restaurants
-  //   const fetchRestaurants = async () => {
-  //     try {
-  //       const response = await fetch(`${API_ENDPOINT}?cuisine=${cuisine}`);
-  //       const jsonResponse = await response.json();
-
-  //       // Set the restaurant data to state
-  //       setRestaurants(jsonResponse.data);
-  //     } catch (error) {
-  //       console.error('Error fetching restaurants:', error);
-  //     }
-  //   };
-
-  //   // Call the fetch function if the cuisine is defined
-  //   if (cuisine) {
-  //     fetchRestaurants();
-  //   }
-  // }, [route.params?.cuisine]);
 
   useEffect(() => {
-    handleFilterPress(selectedFilter);
-  }, [restaurants]);
+    const cuisine = route.params?.cuisine;
+    const fetchRestaurants = async () => {
+      try {
+        const response = await fetch(
+          `${API_ENDPOINT}?cuisine=${encodeURIComponent(cuisine)}`,
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`); // This will catch HTTP errors like 404 or 500
+        }
+        const jsonResponse = await response.json();
+        // Process jsonResponse here
+      } catch (error) {
+        console.error('Error fetching restaurants:', error.message); // Modified to log error.message
+      }
+    };
+
+    if (cuisine) {
+      fetchRestaurants();
+    }
+  }, [route.params?.cuisine]);
+
+  useEffect(() => {
+    const sorted = [...restaurants].sort(
+      (a, b) => b[selectedFilter] - a[selectedFilter],
+    );
+    setDisplayRestaurants(sorted);
+  }, [selectedFilter, restaurants]);
 
   const handleFilterPress = aspect => {
     setSelectedFilter(aspect);
-    const sorted = [...restaurants].sort((a, b) => b[aspect] - a[aspect]);
-    setRestaurants(sorted);
   };
 
   const renderItem = ({item}) => (
@@ -137,13 +63,7 @@ const ResultsScreen = () => {
           </View>
           <Text style={ResultScreenStyle.cardTitle}>{item.name}</Text>
           <Text style={ResultScreenStyle.cardAddress}>{item.address}</Text>
-
           <View style={ResultScreenStyle.cardRatingContainer}>
-            {/* <MaterialIcons
-              name="star"
-              size={18} // Adjust the size as needed
-              color="black" // You can change the color to match your design
-            /> */}
             <Text style={ResultScreenStyle.cardRating}>
               {`${item.overall_avg_score} / 5`}
             </Text>
@@ -180,8 +100,7 @@ const ResultsScreen = () => {
   // );
 
   return (
-    <SafeAreaView
-      style={{flex: 1, backgroundColor: '#FFFAEE', alignContent: 'center'}}>
+    <View style={{flex: 1, backgroundColor: '#FFFAEE', alignContent: 'center'}}>
       {/* <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
@@ -210,14 +129,25 @@ const ResultsScreen = () => {
         <View style={{width: 28}} />
       </View>
 
-      <Text style={ResultScreenStyle.txt}>Filter by Aspects :</Text>
+      <Text style={ResultScreenStyle.txt}>Filter by Aspects : </Text>
       <View style={ResultScreenStyle.btn}>
-        {buttonTitles.map((title, index) => (
+        {['food', 'service', 'price', 'ambiance', 'hygiene'].map(aspect => (
           <TouchableOpacity
-            key={index}
-            style={ResultScreenStyle.button}
-            onPress={() => console.log(`${title} button pressed`)}>
-            <Text style={ResultScreenStyle.buttonText}>{title}</Text>
+            key={aspect}
+            style={
+              selectedFilter === aspect
+                ? ResultScreenStyle.selectedButton
+                : ResultScreenStyle.button
+            }
+            onPress={() =>
+              handleFilterPress(aspect.replace(/\s+/g, '_').toLowerCase())
+            }>
+            <Text style={ResultScreenStyle.buttonText}>
+              {aspect
+                .split('_')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ')}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -250,17 +180,14 @@ const ResultsScreen = () => {
 
       <View>
         <FlatList
-          data={restaurants}
+          data={displayRestaurants}
           renderItem={renderItem}
-          // Use index as part of the key to ensure uniqueness
           keyExtractor={(item, index) => `restaurant-${index}`}
-          numColumns={2} // Display two columns
-          contentContainerStyle={{
-            justifyContent: 'space-between', // Ensures spacing is applied evenly
-          }}
+          numColumns={2}
+          contentContainerStyle={{justifyContent: 'space-between'}}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

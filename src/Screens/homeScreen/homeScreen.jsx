@@ -31,7 +31,7 @@ const HomeScreen = () => {
     <TouchableOpacity
       key={title}
       style={HomeScreenStyle.button}
-      onPress={() => navigation.navigate('ResultsScreen')} // Navigate to Details screen
+      onPress={() => navigation.navigate('ResultsScreen', {cuisine: title})} // Pass selected cuisine as a parameter
     >
       <Text style={HomeScreenStyle.buttonText}>{title}</Text>
     </TouchableOpacity>

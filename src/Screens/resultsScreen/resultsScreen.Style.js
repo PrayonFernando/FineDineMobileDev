@@ -21,7 +21,7 @@ const ResultsScreenStyle = StyleSheet.create({
     alignContent: 'flex-start',
     marginTop: 5,
     color: '#18423B',
-    marginLeft: -280,
+    marginLeft: -250,
   },
   buttonContainer: {
     flexDirection: 'row', // Aligns child buttons in a row
